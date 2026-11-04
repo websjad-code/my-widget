@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="ru"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxMzkyMjQzOTk1MTA0OTI0MjIzMCIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2Q2M2M2ZDAyZjJmOWMzYzRfdmludGFnZV93ZWF0aGVyX3dpZGdldC5odG1sLTQwOCJ9LCJleHAiOjE3OTM4MjAxOTksImlhdCI6MTc5MzgxNjU5OSwiYWxnIjoiUlMyNTYifQ.eErNI85NR1n-Lb2rKVPdmIbbMpQDadfS04Vsct4cS320mGMp0wn6r9iTO3796dw5p4yb34RVOQodEaQ8i3XAGpO36Ei6wjDrhEg0AxVEB-VfUo_eGyMFTzLKefv56i7Qzbn1mfMMpe-7UKhCBbxXFTBtv5NTrkmHWEatd6eSBrei-EOpEB6AvdrirmdNGi10IsT98AG3cWrcs5rCd8JHx5ruvkuqod94-_wj34ujTqEF6dbaaW_jox3opEdf7AJ_hjazR_zCYVeHM2j_T2a5dZhVoreYT-XxypHT-c7mxUd0S8qGMgQQPT0PXS3Cw9Ufv6rlSEPElx1KUQ7yQYpSEg","c_d63c6d02f2f9c3c4_vintage_weather_widget.html-408")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#E6E0D2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Погодный Виджет — Издательский Стиль</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper-light: #EFEAD8;
+      --paper-mid: #E5DEC9;
+      --paper-dark: #D9D1BC;
+      --ink-primary: #1F1D19;
+      --ink-secondary: #3E3A33;
+      --ink-muted: #6E675B;
+      --gold-border: #C5AA78;
+      --gold-inner: #6C5D43;
+      --slate-rain: #376175;
+      --terra-accent: #BD4A36;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 20%, #1c2430 0%, #0d1117 100%);
+      font-family: 'Playfair Display', Georgia, serif;
+      color: var(--ink-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* На мобильных экранах (и внутри Android Web Widget) карточка заполняет весь экран 4x7 */
+    .widget-shell {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+    }
+
+    @media (min-width: 500px) {
+      .widget-shell {
+        padding: 16px;
+      }
+    }
+
+    /* Карточка формата 4:7 */
+    .vintage-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 430px;
+      max-height: 760px;
+      aspect-ratio: 4 / 7;
+      border-radius: 32px;
+      background: linear-gradient(166deg, var(--paper-light) 0%, var(--paper-mid) 54%, var(--paper-dark) 100%);
+      border: 3.5px solid var(--gold-border);
+      box-shadow:
+        inset 0 0 0 1.25px var(--gold-inner),
+        inset 0 2px 12px rgba(255, 253, 245, 0.75),
+        inset 0 -10px 24px rgba(96, 84, 62, 0.14),
+        0 24px 60px rgba(0, 0, 0, 0.65);
+      padding: clamp(14px, 3.8vw, 22px) clamp(16px, 4.5vw, 24px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* При открытии на телефоне — заполняем всю высоту окна */
+    @media (max-width: 480px) {
+      .widget-shell {
+        padding: 4px;
+      }
+      .vintage-card {
+        max-width: 100%;
+        max-height: 100%;
+        aspect-ratio: auto;
+        border-radius: 28px;
+      }
+    }
+
+    /* Зерно плотной хлопковой бумаги */
+    .paper-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.24;
+      mix-blend-mode: multiply;
+      z-index: 1;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    }
+
+    /* Топографические изолинии на фоне */
+    .topo-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.22;
+    }
+
+    .card-layer {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Технические подписи моноширинным шрифтом с поддержкой кириллицы */
+    .mono-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(8px, 2.1vw, 9.5px);
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      line-height: 1.15;
+    }
+
+    /* Цифры с классической антиквой */
+    .num-serif {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-variant-numeric: lining-nums tabular-nums;
+      color: var(--ink-primary);
+    }
+
+    /* Главная температура */
+    .hero-temp {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-variant-numeric: lining-nums;
+      font-size: clamp(54px, 14.5vw, 70px);
+      font-weight: 500;
+      line-height: 0.88;
+      letter-spacing: -0.04em;
+      color: var(--ink-primary);
+      flex-shrink: 0;
+    }
+
+    /* Погодное состояние курсивом (с адаптацией под длинные русские фразы) */
+    .hero-condition {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-style: italic;
+      font-weight: 600;
+      font-size: clamp(20px, 5.2vw, 26px);
+      line-height: 1.05;
+      color: var(--ink-secondary);
+      max-width: 175px;
+      word-wrap: break-word;
+    }
+
+    .hero-condition.long-phrase {
+      font-size: clamp(16px, 4.2vw, 20px);
+      line-height: 1.08;
+    }
+
+    .hairline {
+      height: 1px;
+      width: 100%;
+      background: rgba(75, 67, 53, 0.18);
+      flex-shrink: 0;
+    }
+
+    /* Вертикальные шкалы температур на 7 дней */
+    .temp-bar-track {
+      position: relative;
+      width: 3.5px;
+      height: clamp(38px, 6.2vh, 54px);
+      background: rgba(85, 77, 63, 0.16);
+      border-radius: 999px;
+      margin: 4px auto;
+    }
+
+    .temp-bar-fill {
+      position: absolute;
+      left: -0.25px;
+      width: 4px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--terra-accent) 0%, var(--terra-accent) 38%, var(--slate-rain) 70%, var(--slate-rain) 100%);
+      transition: top 0.4s ease, height 0.4s ease;
+    }
+
+    .temp-bar-dot {
+      position: absolute;
+      left: -1.5px;
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: var(--terra-accent);
+      border: 1px solid var(--paper-light);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+
+    /* Всплывающее окно выбора города внутри карточки */
+    .city-drawer {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      background: rgba(236, 230, 214, 0.97);
+      backdrop-filter: blur(8px);
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .city-drawer.open {
+      display: flex;
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.relative{position:relative}.bottom-3{bottom:0.75rem}.left-1\/2{left:50%}.z-50{z-index:50}.col-span-6{grid-column:span 6 / span 6}.mx-auto{margin-left:auto;margin-right:auto}.my-1{margin-top:0.25rem;margin-bottom:0.25rem}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-2\.5{margin-bottom:0.625rem}.mb-3{margin-bottom:0.75rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.flex{display:flex}.grid{display:grid}.h-2\.5{height:0.625rem}.h-3\.5{height:0.875rem}.h-8{height:2rem}.h-\[88px\]{height:88px}.h-4{height:1rem}.w-2\.5{width:0.625rem}.w-3\.5{width:0.875rem}.w-8{width:2rem}.w-full{width:100%}.w-4{width:1rem}.min-w-0{min-width:0px}.max-w-\[172px\]{max-width:172px}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.grid-cols-6{grid-template-columns:repeat(6, minmax(0, 1fr))}.grid-cols-7{grid-template-columns:repeat(7, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.items-baseline{align-items:baseline}.justify-start{justify-content:flex-start}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.overflow-visible{overflow:visible}.overflow-y-auto{overflow-y:auto}.whitespace-nowrap{white-space:nowrap}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-\[\#376175\]\/30{border-color:rgb(55 97 117 / 0.3)}.border-\[\#6C5D43\]\/20{border-color:rgb(108 93 67 / 0.2)}.border-\[\#6C5D43\]\/25{border-color:rgb(108 93 67 / 0.25)}.border-\[\#6C5D43\]\/40{border-color:rgb(108 93 67 / 0.4)}.border-\[\#8A806C\]{--tw-border-opacity:1;border-color:rgb(138 128 108 / var(--tw-border-opacity, 1))}.border-\[\#C5AA78\]\/70{border-color:rgb(197 170 120 / 0.7)}.bg-\[\#1F1D19\]{--tw-bg-opacity:1;background-color:rgb(31 29 25 / var(--tw-bg-opacity, 1))}.bg-\[\#1F1D19\]\/10{background-color:rgb(31 29 25 / 0.1)}.bg-\[\#1F1D19\]\/95{background-color:rgb(31 29 25 / 0.95)}.bg-\[\#376175\]\/15{background-color:rgb(55 97 117 / 0.15)}.bg-white\/85{background-color:rgb(255 255 255 / 0.85)}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.pb-1{padding-bottom:0.25rem}.pb-3{padding-bottom:0.75rem}.pl-2{padding-left:0.5rem}.pr-0\.5{padding-right:0.125rem}.pt-0\.5{padding-top:0.125rem}.pt-2{padding-top:0.5rem}.text-center{text-align:center}.font-\[\'Cormorant_Garamond\'\]{font-family:'Cormorant Garamond'}.font-\[\'Playfair_Display\'\]{font-family:'Playfair Display'}.font-sans{font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"}.text-\[15px\]{font-size:15px}.text-\[16\.5px\]{font-size:16.5px}.text-\[17px\]{font-size:17px}.text-\[19px\]{font-size:19px}.text-\[7\.8px\]{font-size:7.8px}.text-\[8\.5px\]{font-size:8.5px}.text-\[8\.8px\]{font-size:8.8px}.text-\[9px\]{font-size:9px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-\[14px\]{font-size:14px}.text-\[16px\]{font-size:16px}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.italic{font-style:italic}.leading-\[1\.26\]{line-height:1.26}.leading-tight{line-height:1.25}.leading-none{line-height:1}.tracking-\[0\.11em\]{letter-spacing:0.11em}.tracking-\[0\.12em\]{letter-spacing:0.12em}.tracking-\[0\.1em\]{letter-spacing:0.1em}.tracking-wider{letter-spacing:0.05em}.text-\[\#1F1D19\]{--tw-text-opacity:1;color:rgb(31 29 25 / var(--tw-text-opacity, 1))}.text-\[\#26231E\]{--tw-text-opacity:1;color:rgb(38 35 30 / var(--tw-text-opacity, 1))}.text-\[\#264757\]{--tw-text-opacity:1;color:rgb(38 71 87 / var(--tw-text-opacity, 1))}.text-\[\#2B2722\]{--tw-text-opacity:1;color:rgb(43 39 34 / var(--tw-text-opacity, 1))}.text-\[\#2F2B25\]{--tw-text-opacity:1;color:rgb(47 43 37 / var(--tw-text-opacity, 1))}.text-\[\#666055\]{--tw-text-opacity:1;color:rgb(102 96 85 / var(--tw-text-opacity, 1))}.text-\[\#6C5D43\]{--tw-text-opacity:1;color:rgb(108 93 67 / var(--tw-text-opacity, 1))}.text-\[\#736C5F\]{--tw-text-opacity:1;color:rgb(115 108 95 / var(--tw-text-opacity, 1))}.text-\[\#C5AA78\]{--tw-text-opacity:1;color:rgb(197 170 120 / var(--tw-text-opacity, 1))}.text-\[\#EFEAD8\]{--tw-text-opacity:1;color:rgb(239 234 216 / var(--tw-text-opacity, 1))}.text-\[\#686256\]{--tw-text-opacity:1;color:rgb(104 98 86 / var(--tw-text-opacity, 1))}.placeholder-\[\#767064\]::placeholder{--tw-placeholder-opacity:1;color:rgb(118 112 100 / var(--tw-placeholder-opacity, 1))}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:bg-\[\#1F1D19\]\/20:hover{background-color:rgb(31 29 25 / 0.2)}.hover\:bg-\[\#376175\]\/25:hover{background-color:rgb(55 97 117 / 0.25)}.hover\:bg-black:hover{--tw-bg-opacity:1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.hover\:text-\[\#BD4A36\]:hover{--tw-text-opacity:1;color:rgb(189 74 54 / var(--tw-text-opacity, 1))}.focus\:border-\[\#1F1D19\]:focus{--tw-border-opacity:1;border-color:rgb(31 29 25 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:border-\[\#BD4A36\]{--tw-border-opacity:1;border-color:rgb(189 74 54 / var(--tw-border-opacity, 1))}.group:hover .group-hover\:text-\[\#BD4A36\]{--tw-text-opacity:1;color:rgb(189 74 54 / var(--tw-text-opacity, 1))}</style></head>
+<body>
+
+  <!-- Незаметная плавающая кнопка скачивания (внизу экрана, автоматически удаляется внутри скачанного файла) -->
+  
+
+  <div class="widget-shell">
+    <div id="weatherWidgetCard" class="vintage-card">
+      <!-- Бумажная текстура -->
+      <div class="paper-grain"></div>
+
+      <!-- Фоновые топографические линии -->
+      <svg class="topo-bg" viewBox="0 0 400 700" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M-30 370 C 65 335, 145 415, 240 380 C 315 350, 365 295, 440 330" stroke="#7E735F" stroke-width="0.9"></path>
+        <path d="M-40 415 C 55 375, 160 465, 255 420 C 335 385, 375 340, 450 375" stroke="#7E735F" stroke-width="0.8"></path>
+        <path d="M-20 465 C 85 425, 170 520, 275 470 C 350 435, 385 405, 440 440" stroke="#7E735F" stroke-width="0.8"></path>
+        <path d="M-30 520 C 90 490, 185 575, 300 520 C 360 490, 395 465, 445 500" stroke="#7E735F" stroke-width="0.9"></path>
+        <path d="M10 590 C 120 560, 215 635, 325 580 C 380 550, 410 535, 450 565" stroke="#7E735F" stroke-width="0.8"></path>
+        <ellipse cx="295" cy="360" rx="90" ry="44" transform="rotate(-14 295 360)" stroke="#7E735F" stroke-width="0.7" stroke-dasharray="3 3"></ellipse>
+      </svg>
+
+      <!-- ОСНОВНОЙ СЛОЙ ДАННЫХ ВИДЖЕТА -->
+      <div class="card-layer">
+
+        <!-- 1. ВЕРХНИЙ БЛОК: Температура и статус + Ветровой компас -->
+        <div class="flex items-start justify-between gap-2 pt-0.5">
+          <div class="flex flex-col justify-start cursor-pointer min-w-0 flex-1" onclick="refreshCurrentWeather()" title="Нажмите для обновления данных">
+            <div class="flex items-baseline gap-2.5 flex-wrap">
+              <div id="uiTemp" class="hero-temp">1°</div>
+              <div id="uiCondition" class="hero-condition long-phrase">Кратковременный снег</div>
+            </div>
+          </div>
+
+          <!-- Компас ветра -->
+          <div class="flex flex-col items-center shrink-0">
+            <svg width="72" height="72" viewBox="0 0 80 80" class="overflow-visible">
+              <circle cx="40" cy="40" r="34" fill="#DFD8C6" stroke="#8A806C" stroke-width="1.25"></circle>
+              <circle cx="40" cy="40" r="30.5" fill="none" stroke="#A89E8A" stroke-width="0.65" stroke-dasharray="1.5 2.5"></circle>
+
+              <!-- Засечки румбов -->
+              <g stroke="#6B6353" stroke-width="1">
+                <line x1="40" y1="6" x2="40" y2="10" stroke-width="1.4"></line>
+                <line x1="40" y1="70" x2="40" y2="74"></line>
+                <line x1="6" y1="40" x2="10" y2="40"></line>
+                <line x1="70" y1="40" x2="74" y2="40"></line>
+                <line x1="16" y1="16" x2="19" y2="19"></line>
+                <line x1="64" y1="16" x2="61" y2="19"></line>
+                <line x1="16" y1="64" x2="19" y2="61"></line>
+                <line x1="64" y1="64" x2="61" y2="61"></line>
+              </g>
+
+              <!-- Русские буквы сторон света -->
+              <text x="40" y="16.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7.5" font-weight="700" fill="#433E34">С</text>
+              <text x="65" y="42.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="6.5" font-weight="600" fill="#7A7160">В</text>
+              <text x="40" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="6.5" font-weight="600" fill="#7A7160">Ю</text>
+              <text x="15" y="42.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="6.5" font-weight="600" fill="#7A7160">З</text>
+
+              <!-- Вращающаяся стрелка строго вокруг центра (40, 40) внутри кольца компаса -->
+              <g id="compassNeedle" transform="translate(40, 40) rotate(319)">
+                <!-- Ось стрелки через центр -->
+                <line x1="0" y1="-20" x2="0" y2="23" stroke="#5A5244" stroke-width="1.4" stroke-linecap="round"></line>
+                <!-- Остриё стрелки -->
+                <polygon points="0,-24.5 -3.6,-16.5 3.6,-16.5" fill="#25221C"></polygon>
+                <!-- Хвостовик стрелки -->
+                <circle cx="0" cy="21" r="1.8" fill="#5A5244"></circle>
+              </g>
+
+              <!-- Центральный круг со скоростью ветра (м/с) -->
+              <circle cx="40" cy="40" r="14.5" fill="#ECE6D8" stroke="#968B77" stroke-width="1"></circle>
+              <text id="uiWindSpeed" x="40" y="44.5" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="16" font-weight="700" fill="#1F1D19">2</text>
+            </svg>
+            <div id="uiWindLabel" class="mono-label mt-1 tracking-wider text-[8.5px]">ВЕТЕР · 2 М/С · СЗ</div>
+          </div>
+        </div>
+
+        <!-- 2. ШЕСТЬ КЛЮЧЕВЫХ ПОКАЗАТЕЛЕЙ -->
+        <div class="grid grid-cols-6 gap-1 py-1">
+          <div class="flex flex-col">
+            <span class="mono-label">ОЩУЩ.</span>
+            <span id="uiFeels" class="num-serif text-[19px] font-bold leading-tight mt-0.5">-3°</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="mono-label">МАКС.</span>
+            <span id="uiHigh" class="num-serif text-[19px] font-bold leading-tight mt-0.5">3°</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="mono-label">МИН.</span>
+            <span id="uiLow" class="num-serif text-[19px] font-bold leading-tight mt-0.5">1°</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="mono-label">ОСАДКИ</span>
+            <span id="uiRainProb" class="num-serif text-[19px] font-bold leading-tight mt-0.5" style="color: var(--slate-rain);">95%</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="mono-label">ВЛАЖН.</span>
+            <span id="uiHumid" class="num-serif text-[19px] font-bold leading-tight mt-0.5">86%</span>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="mono-label">УФ</span>
+            <span id="uiUv" class="num-serif text-[19px] font-bold leading-tight mt-0.5">0</span>
+          </div>
+        </div>
+
+        <div class="hairline"></div>
+
+        <!-- 3. ПОЧАСОВОЙ ГРАФИК НА 18 ЧАСОВ С ДИНАМИЧЕСКОЙ ШТРИХОВКОЙ ОСАДКОВ -->
+        <div class="py-0.5">
+          <div class="text-center mono-label text-[8.5px] tracking-[0.12em] mb-1">
+            СЛЕДУЮЩИЕ 18 ЧАСОВ · ШТРИХОВКА = ОСАДКИ
+          </div>
+
+          <div class="relative w-full">
+            <svg id="hourlyChartSvg" viewBox="0 0 356 90" class="w-full h-[88px] overflow-visible">
+              <defs>
+                <!-- Гравюрная диагональная штриховка для часов с дождём/снегом -->
+                <pattern id="rainHatchPattern" width="4.5" height="4.5" patternTransform="rotate(38 0 0)" patternUnits="userSpaceOnUse">
+                  <line x1="0" y1="0" x2="0" y2="4.5" stroke="#476675" stroke-width="1.15" stroke-opacity="0.65"></line>
+                </pattern>
+                <!-- Мягкая заливка для сухих часов -->
+                <linearGradient id="dryAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#8C826D" stop-opacity="0.16"></stop>
+                  <stop offset="100%" stop-color="#8C826D" stop-opacity="0.0"></stop>
+                </linearGradient>
+                <!-- Маска вертикального затухания штриховки -->
+                <linearGradient id="hatchFadeGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="white" stop-opacity="0.95"></stop>
+                  <stop offset="82%" stop-color="white" stop-opacity="0.65"></stop>
+                  <stop offset="100%" stop-color="white" stop-opacity="0.0"></stop>
+                </linearGradient>
+                <mask id="hatchMask">
+                  <rect x="0" y="0" width="356" height="68" fill="url(#hatchFadeGrad)"></rect>
+                </mask>
+                <!-- Маска по часам, где реально прогнозируются осадки -->
+                <clipPath id="rainHoursClip">
+                  <g id="rainClipRects"><rect x="17.5" y="0" width="19.9" height="70"></rect><rect x="206.4" y="0" width="19.9" height="70"></rect><rect x="225.3" y="0" width="19.9" height="70"></rect><rect x="244.2" y="0" width="19.9" height="70"></rect><rect x="263.0" y="0" width="19.9" height="70"></rect><rect x="281.9" y="0" width="19.9" height="70"></rect><rect x="300.8" y="0" width="19.9" height="70"></rect><rect x="319.7" y="0" width="19.9" height="70"></rect></g>
+                </clipPath>
+              </defs>
+
+              <!-- Нижняя ось времени -->
+              <line x1="6" y1="68" x2="350" y2="68" stroke="#8A8170" stroke-width="0.85" stroke-opacity="0.6"></line>
+
+              <!-- Фоновая легкая тень под всей кривой -->
+              <path id="svgDryArea" d="M 8 45.1 Q 8 45.1, 17.4 44.9 Q 26.9 44.6, 36.3 44.4 Q 45.8 44.2, 55.3 44.2 Q 64.7 44.2, 74.2 44.7 Q 83.6 45.1, 93 45.8 Q 102.4 46.4, 111.8 46.8 Q 121.3 47.2, 130.8 47.5 Q 140.2 47.7, 149.6 47.5 Q 159.1 47.2, 168.6 47.2 Q 178 47.2, 187.4 47.2 Q 196.9 47.2, 206.4 47.2 Q 215.8 47.2, 225.3 47.2 Q 234.7 47.2, 244.1 46.4 Q 253.6 45.5, 263 44.4 Q 272.4 43.3, 281.9 42.3 Q 291.3 41.2, 300.8 39.7 Q 310.2 38.1, 319.6 36 Q 329.1 33.8, 338.6 32 T 348 30.3 L 348 68 L 8 68 Z" fill="url(#dryAreaGrad)"></path>
+
+              <!-- Заштрихованная область под кривой (отображается в часы с вероятностью осадков) -->
+              <path id="svgRainArea" d="M 8 45.1 Q 8 45.1, 17.4 44.9 Q 26.9 44.6, 36.3 44.4 Q 45.8 44.2, 55.3 44.2 Q 64.7 44.2, 74.2 44.7 Q 83.6 45.1, 93 45.8 Q 102.4 46.4, 111.8 46.8 Q 121.3 47.2, 130.8 47.5 Q 140.2 47.7, 149.6 47.5 Q 159.1 47.2, 168.6 47.2 Q 178 47.2, 187.4 47.2 Q 196.9 47.2, 206.4 47.2 Q 215.8 47.2, 225.3 47.2 Q 234.7 47.2, 244.1 46.4 Q 253.6 45.5, 263 44.4 Q 272.4 43.3, 281.9 42.3 Q 291.3 41.2, 300.8 39.7 Q 310.2 38.1, 319.6 36 Q 329.1 33.8, 338.6 32 T 348 30.3 L 348 68 L 8 68 Z" fill="url(#rainHatchPattern)" mask="url(#hatchMask)" clip-path="url(#rainHoursClip)"></path>
+
+              <!-- Кривая хода температуры -->
+              <path id="svgTempCurve" d="M 8 45.1 Q 8 45.1, 17.4 44.9 Q 26.9 44.6, 36.3 44.4 Q 45.8 44.2, 55.3 44.2 Q 64.7 44.2, 74.2 44.7 Q 83.6 45.1, 93 45.8 Q 102.4 46.4, 111.8 46.8 Q 121.3 47.2, 130.8 47.5 Q 140.2 47.7, 149.6 47.5 Q 159.1 47.2, 168.6 47.2 Q 178 47.2, 187.4 47.2 Q 196.9 47.2, 206.4 47.2 Q 215.8 47.2, 225.3 47.2 Q 234.7 47.2, 244.1 46.4 Q 253.6 45.5, 263 44.4 Q 272.4 43.3, 281.9 42.3 Q 291.3 41.2, 300.8 39.7 Q 310.2 38.1, 319.6 36 Q 329.1 33.8, 338.6 32 T 348 30.3" fill="none" stroke="#221F1B" stroke-width="1.85" stroke-linecap="round"></path>
+
+              <!-- Левая точка (Сейчас) -->
+              <circle id="svgStartDot" cx="8" cy="45.1" r="3.2" fill="#EAE4D3" stroke="#221F1B" stroke-width="1.5"></circle>
+              <text id="svgStartTemp" x="8" y="37.1" text-anchor="start" font-family="Cormorant Garamond, Georgia, serif" font-size="14.5" font-weight="700" fill="#221F1B">1°</text>
+
+              <!-- Правая точка (+18 часов) -->
+              <circle id="svgEndDot" cx="348" cy="30.3" r="3.2" fill="#EAE4D3" stroke="#221F1B" stroke-width="1.5"></circle>
+              <text id="svgEndTemp" x="348" y="22.3" text-anchor="end" font-family="Cormorant Garamond, Georgia, serif" font-size="14.5" font-weight="700" fill="#221F1B">4°</text>
+
+              <!-- Подписи часов -->
+              <g id="svgTimeLabels" font-family="JetBrains Mono, monospace" font-size="8.5" font-weight="600" fill="#6B6458" letter-spacing="0.05em"><text x="6" y="83" text-anchor="start">СЕЙЧАС</text><text x="92" y="83" text-anchor="middle">01:00</text><text x="178" y="83" text-anchor="middle">05:00</text><text x="264" y="83" text-anchor="middle">09:00</text><text x="350" y="83" text-anchor="end">13:00</text></g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="hairline"></div>
+
+        <!-- 4. ПРОГНОЗ НА 7 ДНЕЙ С ПРОПОРЦИОНАЛЬНЫМИ ТЕРМОМЕТРАМИ -->
+        <div id="weeklyGrid" class="grid grid-cols-7 gap-1 text-center py-1">
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] text-[#1F1D19] font-bold">СР</span>
+            <svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15.2H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="#2E2A23" stroke-width="1.65"></path>
+            <circle cx="9" cy="19" r="1" fill="#376175"></circle>
+            <circle cx="12.5" cy="19.5" r="1" fill="#376175"></circle>
+            <circle cx="16" cy="19" r="1" fill="#376175"></circle>
+          </svg>
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">3°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: 29.4%; height: 51.3%;"></div>
+              <div class="temp-bar-dot" style="top: calc(52.7% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">1°</span>
+          </div>
+        
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] ">ЧТ</span>
+            <svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="#2E2A23" stroke-width="1.65"></path>
+            <path d="M8.8 17.5l-1.2 3.3M12.8 17.5l-1.2 3.3M16.8 17.5l-1.2 3.3" stroke="#376175" stroke-width="1.7"></path>
+          </svg>
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">4°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: 14.2%; height: 72.6%;"></div>
+              <div class="temp-bar-dot" style="top: calc(14.2% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">0°</span>
+          </div>
+        
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] ">ПТ</span>
+            <svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15.2H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="#2E2A23" stroke-width="1.65"></path>
+            <circle cx="9" cy="19" r="1" fill="#376175"></circle>
+            <circle cx="12.5" cy="19.5" r="1" fill="#376175"></circle>
+            <circle cx="16" cy="19" r="1" fill="#376175"></circle>
+          </svg>
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">2°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: 34.5%; height: 50.3%;"></div>
+              <div class="temp-bar-dot" style="top: calc(34.5% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">0°</span>
+          </div>
+        
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] ">СБ</span>
+            <svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke="#2E2A23" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 18H7a4.5 4.5 0 0 1-.9-8.9 5.5 5.5 0 0 1 10.7-1.5A3.8 3.8 0 0 1 17.5 18Z"></path>
+          </svg>
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">0°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: 56.8%; height: 43.2%;"></div>
+              <div class="temp-bar-dot" style="top: calc(56.8% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">-1°</span>
+          </div>
+        
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] ">ВС</span>
+            <svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke="#2E2A23" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 18H7a4.5 4.5 0 0 1-.9-8.9 5.5 5.5 0 0 1 10.7-1.5A3.8 3.8 0 0 1 17.5 18Z"></path>
+          </svg>
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">4°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: 21.3%; height: 69.6%;"></div>
+              <div class="temp-bar-dot" style="top: calc(21.3% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">0°</span>
+          </div>
+        
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] ">ПН</span>
+            <svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15.5H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="#2E2A23" stroke-width="1.65"></path>
+            <path d="M9 18.2l-.8 2M13 18.2l-.8 2M16.5 18.2l-.8 2" stroke="#376175" stroke-width="1.65"></path>
+          </svg>
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">6°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: 0.0%; height: 57.4%;"></div>
+              <div class="temp-bar-dot" style="top: calc(0.0% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">3°</span>
+          </div>
+        
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] ">ВТ</span>
+            <svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke="#2E2A23" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 18H7a4.5 4.5 0 0 1-.9-8.9 5.5 5.5 0 0 1 10.7-1.5A3.8 3.8 0 0 1 17.5 18Z"></path>
+          </svg>
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">4°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: 17.2%; height: 69.6%;"></div>
+              <div class="temp-bar-dot" style="top: calc(17.2% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">0°</span>
+          </div>
+        </div>
+
+        <!-- 5. СОЛНЕЧНЫЙ ГОРИЗОНТ И ТОЧНАЯ АСТРОНОМИЧЕСКАЯ ФАЗА ЛУНЫ -->
+        <div class="grid grid-cols-12 items-end gap-1 py-0.5">
+          <!-- Дуга солнца -->
+          <div class="col-span-6 flex flex-col items-center">
+            <svg viewBox="0 0 170 82" class="w-full max-w-[172px] overflow-visible">
+              <text id="sunNowLabel" x="138.0" y="49.9" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-style="italic" font-weight="600" font-size="13" fill="#433E35">За горизонтом</text>
+
+              <!-- Шкала секстанта -->
+              <path d="M 18 64 A 67 50 0 0 1 152 64" fill="none" stroke="#857B68" stroke-width="3.4" stroke-dasharray="1.2 3.1" opacity="0.65"></path>
+              <!-- Траектория солнца -->
+              <path d="M 23 64 A 62 45 0 0 1 147 64" fill="none" stroke="#595245" stroke-width="1.15" stroke-dasharray="3.5 3" opacity="0.8"></path>
+
+              <!-- Линии горизонта -->
+              <line x1="12" y1="64" x2="27" y2="64" stroke="#6B6355" stroke-width="1.1"></line>
+              <line x1="143" y1="64" x2="158" y2="64" stroke="#6B6355" stroke-width="1.1"></line>
+
+              <!-- Маркер солнца на дуге -->
+              <g id="sunDotGroup" transform="translate(146.7, 59.9)">
+                <circle cx="0" cy="0" r="6.5" fill="#EAE4D3" stroke="#8A806E" stroke-width="0.9"></circle>
+                <circle id="sunDotCore" cx="0" cy="0" r="4.3" fill="#376175"></circle>
+              </g>
+
+              <!-- Восход и закат -->
+              <text id="uiSunrise" x="20" y="77" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" font-weight="600" fill="#686256">07:41</text>
+              <text id="uiSunset" x="150" y="77" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" font-weight="600" fill="#686256">16:43</text>
+            </svg>
+          </div>
+
+          <!-- Фаза луны и Золотой час -->
+          <div class="col-span-6 flex items-center justify-end gap-2.5 pr-0.5 pb-1">
+            <svg width="48" height="48" viewBox="0 0 50 50" class="shrink-0">
+              <circle cx="25" cy="25" r="22" fill="#322F2A" stroke="#6B6355" stroke-width="1"></circle>
+              <!-- Динамический путь освещённой части луны -->
+              <path id="moonLitPath" d="M 25 3 A 22 22 0 0 0 25 47 A 8.94 22 0 0 1 25 3 Z" fill="#F2EDE0"></path>
+              <!-- Кратеры -->
+              <circle cx="16" cy="19" r="3" fill="#CFC8B4" opacity="0.45"></circle>
+              <circle cx="22" cy="32" r="4.2" fill="#CFC8B4" opacity="0.38"></circle>
+              <circle cx="32" cy="21" r="2.5" fill="#CFC8B4" opacity="0.35"></circle>
+            </svg>
+
+            <div class="flex flex-col items-start leading-tight">
+              <div id="uiMoonPhase" class="font-['Cormorant_Garamond'] italic font-semibold text-[15px] text-[#2F2B25] mb-1">Старая луна</div>
+              <div class="mono-label text-[7.8px] tracking-[0.1em] text-[#736C5F]">ЗОЛОТОЙ ЧАС</div>
+              <div id="uiGoldenHour" class="num-serif text-[17px] font-bold mt-0.5" style="color: var(--terra-accent);">16:01</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. РЕДАКЦИОННАЯ СВОДКА ПОГОДЫ КУРСИВОМ -->
+        <div class="py-0.5 text-center">
+          <p id="uiSummaryText" class="font-['Cormorant_Garamond'] italic font-semibold text-[16.5px] leading-[1.26] text-[#26231E] px-1">В ближайшие 18 часов ожидаются осадки (95%). Завтра +4°, кратковременный дождь.</p>
+        </div>
+
+        <div class="hairline"></div>
+
+        <!-- 7. ПОДВАЛ КАРТОЧКИ: ДАТА СЛЕВА И ВЫБОР ГОРОДА СПРАВА -->
+        <div class="flex items-center justify-between pt-0.5">
+          <div id="uiFooterDate" class="mono-label text-[8.8px] tracking-[0.11em] text-[#666055]">СРЕДА, 4 НОЯБРЯ</div>
+
+          <button onclick="openCityDrawer()" class="group flex items-center gap-1 mono-label text-[9px] tracking-[0.11em] text-[#2B2722] hover:text-[#BD4A36] active:scale-95 transition cursor-pointer py-0.5 pl-2" title="Выбрать город">
+            <span id="uiFooterCity" class="border-b border-[#6C5D43]/40 group-hover:border-[#BD4A36]">МОСКВА</span>
+            <svg class="w-2.5 h-2.5 text-[#6C5D43] group-hover:text-[#BD4A36] transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ВСТРОЕННАЯ ПАНЕЛЬ ВЫБОРА ГОРОДА ВНУТРИ КАРТОЧКИ -->
+      <div id="cityDrawer" class="city-drawer">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-[#6C5D43]/25">
+          <div>
+            <div class="mono-label text-[8.5px]">МЕТЕОСТАНЦИЯ · OPEN-METEO ECMWF/ICON</div>
+            <h3 class="font-['Playfair_Display'] font-bold text-lg text-[#1F1D19] mt-0.5">Выбор города</h3>
+          </div>
+          <button onclick="closeCityDrawer()" class="w-8 h-8 rounded-full bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 flex items-center justify-center text-[#1F1D19] font-bold text-lg">×</button>
+        </div>
+
+        <!-- Поле поиска с живыми подсказками -->
+        <div class="flex gap-1.5 mb-2.5 font-sans">
+          <input id="citySearchInput" type="text" placeholder="Введите город или посёлок..." oninput="handleCityAutocomplete(this.value)" onkeydown="if(event.key==='Enter') triggerDirectSearch()" class="flex-1 px-3.5 py-2.5 rounded-xl bg-white/85 border border-[#8A806C] text-sm text-[#1F1D19] placeholder-[#767064] focus:outline-none focus:border-[#1F1D19]">
+          <button onclick="triggerDirectSearch()" class="px-3.5 py-2.5 rounded-xl bg-[#1F1D19] text-[#EFEAD8] text-xs font-semibold">
+            Найти
+          </button>
+        </div>
+
+        <!-- Кнопка автоопределения по GPS -->
+        <button onclick="locateByGPS()" class="w-full py-2 px-3 mb-3 rounded-xl bg-[#376175]/15 hover:bg-[#376175]/25 border border-[#376175]/30 text-[#264757] font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+          <span>📍 Определить моё местоположение по GPS</span>
+        </button>
+
+        <!-- Результаты поиска -->
+        <div id="autocompleteList" class="flex-1 overflow-y-auto space-y-1 font-sans mb-3 pr-0.5">
+          <!-- Подсказки геолокации -->
+        </div>
+
+        <!-- Быстрый выбор популярных городов России -->
+        <div class="pt-2 border-t border-[#6C5D43]/20">
+          <div class="mono-label mb-2">БЫСТРЫЙ ВЫБОР:</div>
+          <div class="flex flex-wrap gap-1.5 font-sans">
+            <button onclick="selectPresetCity(55.7558, 37.6173, 'Москва')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Москва</button>
+            <button onclick="selectPresetCity(59.9386, 30.3141, 'Санкт-Петербург')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Санкт-Петербург</button>
+            <button onclick="selectPresetCity(55.7887, 49.1221, 'Казань')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Казань</button>
+            <button onclick="selectPresetCity(56.8519, 60.6122, 'Екатеринбург')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Екатеринбург</button>
+            <button onclick="selectPresetCity(55.0415, 82.9346, 'Новосибирск')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Новосибирск</button>
+            <button onclick="selectPresetCity(56.3269, 44.0059, 'Нижний Новгород')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Нижний Новгород</button>
+            <button onclick="selectPresetCity(45.0355, 38.9753, 'Краснодар')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Краснодар</button>
+            <button onclick="selectPresetCity(43.5855, 39.7231, 'Сочи')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Сочи</button>
+            <button onclick="selectPresetCity(54.8617, 39.5994, 'Константиново')" class="px-2.5 py-1 rounded-lg bg-[#1F1D19]/10 hover:bg-[#1F1D19]/20 text-xs font-medium text-[#1F1D19]">Константиново</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. ГРАФИЧЕСКИЕ ИКОНКИ ПОГОДЫ В СТИЛЕ ГРАВЮРЫ
+    // =========================================================================
+    function getWeatherIconSvg(type) {
+      const stroke = "#2E2A23";
+      const rainStroke = "#376175";
+      switch (type) {
+        case 'sun':
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/>
+          </svg>`;
+        case 'partly':
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 4.5V3M5.5 6.5L4.3 5.3M4.5 11H3"/>
+            <path d="M9.8 7.5a3.5 3.5 0 0 1 6.1 2.1h.6a3.5 3.5 0 0 1 .5 7H8a4 4 0 0 1-.8-7.9"/>
+          </svg>`;
+        case 'cloud':
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 18H7a4.5 4.5 0 0 1-.9-8.9 5.5 5.5 0 0 1 10.7-1.5A3.8 3.8 0 0 1 17.5 18Z"/>
+          </svg>`;
+        case 'drizzle':
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15.5H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="${stroke}" stroke-width="1.65"/>
+            <path d="M9 18.2l-.8 2M13 18.2l-.8 2M16.5 18.2l-.8 2" stroke="${rainStroke}" stroke-width="1.65"/>
+          </svg>`;
+        case 'rain':
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="${stroke}" stroke-width="1.65"/>
+            <path d="M8.8 17.5l-1.2 3.3M12.8 17.5l-1.2 3.3M16.8 17.5l-1.2 3.3" stroke="${rainStroke}" stroke-width="1.7"/>
+          </svg>`;
+        case 'snow':
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15.2H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="${stroke}" stroke-width="1.65"/>
+            <circle cx="9" cy="19" r="1" fill="${rainStroke}"/>
+            <circle cx="12.5" cy="19.5" r="1" fill="${rainStroke}"/>
+            <circle cx="16" cy="19" r="1" fill="${rainStroke}"/>
+          </svg>`;
+        case 'storm':
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.2 15H7.2a4.2 4.2 0 0 1-.8-8.3 5.2 5.2 0 0 1 10.1-1.4 3.5 3.5 0 0 1 .7 7Z" stroke="${stroke}" stroke-width="1.65"/>
+            <path d="M12.5 15.5l-2 3.2h2.6l-1.6 3.3" stroke="#BD4A36" stroke-width="1.7"/>
+          </svg>`;
+        default:
+          return `<svg class="w-4 h-4 my-1 mx-auto" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.7"><path d="M17.5 18H7a4.5 4.5 0 0 1-.9-8.9 5.5 5.5 0 0 1 10.7-1.5A3.8 3.8 0 0 1 17.5 18Z"/></svg>`;
+      }
+    }
+
+    // =========================================================================
+    // 2. РАСШИФРОВКА КОДОВ WMO И НАПРАВЛЕНИЯ ВЕТРА НА ЕСТЕСТВЕННЫЙ РУССКИЙ ЯЗЫК
+    // =========================================================================
+    function decodeWmoCode(code) {
+      const map = {
+        0:  { text: 'Ясно', icon: 'sun', rainy: false },
+        1:  { text: 'Преимущественно ясно', icon: 'sun', rainy: false },
+        2:  { text: 'Переменная облачность', icon: 'partly', rainy: false },
+        3:  { text: 'Пасмурно', icon: 'cloud', rainy: false },
+        45: { text: 'Туман', icon: 'cloud', rainy: false },
+        48: { text: 'Туман', icon: 'cloud', rainy: false },
+        51: { text: 'Морось', icon: 'drizzle', rainy: true },
+        53: { text: 'Морось', icon: 'drizzle', rainy: true },
+        55: { text: 'Густая морось', icon: 'drizzle', rainy: true },
+        56: { text: 'Ледяной дождь', icon: 'drizzle', rainy: true },
+        57: { text: 'Ледяной дождь', icon: 'drizzle', rainy: true },
+        61: { text: 'Небольшой дождь', icon: 'rain', rainy: true },
+        63: { text: 'Дождь', icon: 'rain', rainy: true },
+        65: { text: 'Сильный дождь', icon: 'rain', rainy: true },
+        66: { text: 'Ледяной дождь', icon: 'rain', rainy: true },
+        67: { text: 'Ледяной дождь', icon: 'rain', rainy: true },
+        71: { text: 'Небольшой снег', icon: 'snow', rainy: true },
+        73: { text: 'Снег', icon: 'snow', rainy: true },
+        75: { text: 'Сильный снег', icon: 'snow', rainy: true },
+        77: { text: 'Снежная крупа', icon: 'snow', rainy: true },
+        80: { text: 'Кратковременный дождь', icon: 'rain', rainy: true },
+        81: { text: 'Ливень', icon: 'rain', rainy: true },
+        82: { text: 'Сильный ливень', icon: 'rain', rainy: true },
+        85: { text: 'Кратковременный снег', icon: 'snow', rainy: true },
+        86: { text: 'Сильный снегопад', icon: 'snow', rainy: true },
+        95: { text: 'Гроза', icon: 'storm', rainy: true },
+        96: { text: 'Гроза с градом', icon: 'storm', rainy: true },
+        99: { text: 'Гроза с градом', icon: 'storm', rainy: true }
+      };
+      return map[code] || { text: 'Облачно', icon: 'cloud', rainy: false };
+    }
+
+    function degToRussianCardinal(deg) {
+      const dirs = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
+      const normalized = ((deg % 360) + 360) % 360;
+      return dirs[Math.round(normalized / 45) % 8];
+    }
+
+    // =========================================================================
+    // 3. ТОЧНЫЙ АСТРОНОМИЧЕСКИЙ РАСЧЁТ ФАЗЫ ЛУНЫ И ОТРИСОВКА ДИСКА
+    // =========================================================================
+    function calculateMoonAstronomy(dateObj = new Date()) {
+      const synodicMonth = 29.530588853;
+      // Известное астрономическое новолуние: 6 января 2000 18:14 UTC
+      const refNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0);
+      const diffDays = (dateObj.getTime() - refNewMoon) / 86400000;
+      const phase = ((diffDays % synodicMonth) + synodicMonth) % synodicMonth / synodicMonth; // 0..1
+
+      let name = 'Убывающая луна';
+      if (phase < 0.03 || phase > 0.97) name = 'Новолуние';
+      else if (phase < 0.22) name = 'Растущий серп';
+      else if (phase < 0.28) name = 'Первая четверть';
+      else if (phase < 0.47) name = 'Растущая луна';
+      else if (phase < 0.53) name = 'Полнолуние';
+      else if (phase < 0.72) name = 'Убывающая луна';
+      else if (phase < 0.78) name = 'Последняя четверть';
+      else name = 'Старая луна';
+
+      // Построение точного SVG пути терминатора луны (радиус R = 22, центр 25,25)
+      const r = 22;
+      let pathD = '';
+      if (phase <= 0.02 || phase >= 0.98) {
+        pathD = ''; // Новолуние
+      } else if (phase >= 0.48 && phase <= 0.52) {
+        pathD = `M 25 ${25 - r} A ${r} ${r} 0 1 1 24.99 ${25 - r} Z`; // Полнолуние
+      } else if (phase < 0.5) {
+        // Растущая: освещена правая сторона
+        const k = Math.cos(phase * 2 * Math.PI); // от 1 до -1
+        const rx = Math.abs(k) * r;
+        const sweepTerm = k > 0 ? 0 : 1;
+        pathD = `M 25 ${25 - r} A ${r} ${r} 0 0 1 25 ${25 + r} A ${rx.toFixed(2)} ${r} 0 0 ${sweepTerm} 25 ${25 - r} Z`;
+      } else {
+        // Убывающая: освещена левая сторона
+        const k = Math.cos(phase * 2 * Math.PI); // от -1 до 1
+        const rx = Math.abs(k) * r;
+        const sweepTerm = k < 0 ? 0 : 1;
+        pathD = `M 25 ${25 - r} A ${r} ${r} 0 0 0 25 ${25 + r} A ${rx.toFixed(2)} ${r} 0 0 ${sweepTerm} 25 ${25 - r} Z`;
+      }
+
+      return { name, pathD };
+    }
+
+    // =========================================================================
+    // 4. ОТРИСОВКА ГРАФИКА 18 ЧАСОВ, НЕДЕЛИ И СОЛНЕЧНОЙ ДУГИ
+    // =========================================================================
+    function renderHourlyChart(temps19, probs19, labels5) {
+      const minT = Math.min(...temps19) - 1;
+      const maxT = Math.max(...temps19) + 1;
+      const span = Math.max(maxT - minT, 3);
+
+      const xStart = 8;
+      const xEnd = 348;
+      const yTop = 26;
+      const yBottom = 52;
+
+      const pts = temps19.map((t, idx) => {
+        const x = xStart + (idx / (temps19.length - 1)) * (xEnd - xStart);
+        const norm = (t - minT) / span;
+        const y = yBottom - norm * (yBottom - yTop);
+        return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) };
+      });
+
+      // Сглаженная кривая
+      let d = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const xc = Number(((pts[i].x + pts[i + 1].x) / 2).toFixed(1));
+        const yc = Number(((pts[i].y + pts[i + 1].y) / 2).toFixed(1));
+        d += ` Q ${pts[i].x} ${pts[i].y}, ${xc} ${yc}`;
+      }
+      const last = pts[pts.length - 1];
+      d += ` T ${last.x} ${last.y}`;
+
+      const areaD = `${d} L ${last.x} 68 L ${pts[0].x} 68 Z`;
+      document.getElementById('svgTempCurve').setAttribute('d', d);
+      document.getElementById('svgDryArea').setAttribute('d', areaD);
+      document.getElementById('svgRainArea').setAttribute('d', areaD);
+
+      // Формируем зоны штриховки для часов с осадками (вероятность >= 35%)
+      const clipGroup = document.getElementById('rainClipRects');
+      const stepW = (xEnd - xStart) / (temps19.length - 1);
+      let rectsHtml = '';
+      for (let i = 0; i < probs19.length; i++) {
+        if (probs19[i] >= 35) {
+          const rx = Math.max(0, pts[i].x - stepW / 2);
+          rectsHtml += `<rect x="${rx.toFixed(1)}" y="0" width="${(stepW + 1).toFixed(1)}" height="70" />`;
+        }
+      }
+      clipGroup.innerHTML = rectsHtml;
+
+      // Точки начала и конца графика
+      const first = pts[0];
+      document.getElementById('svgStartDot').setAttribute('cx', first.x);
+      document.getElementById('svgStartDot').setAttribute('cy', first.y);
+      document.getElementById('svgStartTemp').setAttribute('x', first.x);
+      document.getElementById('svgStartTemp').setAttribute('y', first.y - 8);
+      document.getElementById('svgStartTemp').textContent = `${Math.round(temps19[0])}°`;
+
+      document.getElementById('svgEndDot').setAttribute('cx', last.x);
+      document.getElementById('svgEndDot').setAttribute('cy', last.y);
+      document.getElementById('svgEndTemp').setAttribute('x', last.x);
+      document.getElementById('svgEndTemp').setAttribute('y', last.y - 8);
+      document.getElementById('svgEndTemp').textContent = `${Math.round(temps19[temps19.length - 1])}°`;
+
+      // Подписи времени
+      const xPositions = [6, 92, 178, 264, 350];
+      const anchors = ['start', 'middle', 'middle', 'middle', 'end'];
+      document.getElementById('svgTimeLabels').innerHTML = labels5.map((lbl, i) =>
+        `<text x="${xPositions[i]}" y="83" text-anchor="${anchors[i]}">${lbl}</text>`
+      ).join('');
+    }
+
+    function renderWeeklyForecast(weekly, currentTemp) {
+      const highs = weekly.map(d => d.high);
+      const lows = weekly.map(d => d.low);
+      const weekMax = Math.max(...highs);
+      const weekMin = Math.min(...lows);
+      const weekSpan = Math.max(weekMax - weekMin, 4);
+
+      const grid = document.getElementById('weeklyGrid');
+      grid.innerHTML = weekly.map((item, idx) => {
+        const topPct = Math.max(0, Math.min(72, ((weekMax - item.high) / weekSpan) * 72));
+        const bottomPct = Math.max(0, Math.min(72, ((item.low - weekMin) / weekSpan) * 72));
+        const heightPct = Math.max(100 - topPct - bottomPct, 20);
+
+        // Для сегодняшнего дня точка показывает текущую температуру на шкале, для остальных — пик дня
+        let dotTopPct = topPct;
+        if (idx === 0 && typeof currentTemp === 'number') {
+          dotTopPct = Math.max(topPct, Math.min(topPct + heightPct - 8, ((weekMax - currentTemp) / weekSpan) * 72));
+        }
+
+        return `
+          <div class="flex flex-col items-center">
+            <span class="mono-label text-[8.5px] ${idx === 0 ? 'text-[#1F1D19] font-bold' : ''}">${item.dayName}</span>
+            ${getWeatherIconSvg(item.icon)}
+            <span class="num-serif text-[16px] font-bold leading-none mt-0.5">${Math.round(item.high)}°</span>
+            <div class="temp-bar-track">
+              <div class="temp-bar-fill" style="top: ${topPct.toFixed(1)}%; height: ${heightPct.toFixed(1)}%;"></div>
+              <div class="temp-bar-dot" style="top: calc(${dotTopPct.toFixed(1)}% - 1px);"></div>
+            </div>
+            <span class="num-serif text-[14px] font-semibold text-[#686256] leading-none">${Math.round(item.low)}°</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateSunHorizonArc(nowMinutes, sunriseMinutes, sunsetMinutes) {
+      const isDaytime = nowMinutes >= sunriseMinutes && nowMinutes <= sunsetMinutes;
+      let progress = 0.5;
+
+      if (isDaytime) {
+        progress = (nowMinutes - sunriseMinutes) / Math.max(1, sunsetMinutes - sunriseMinutes);
+      } else if (nowMinutes < sunriseMinutes) {
+        progress = 0.02;
+      } else {
+        progress = 0.98;
+      }
+
+      const clamped = Math.max(0.03, Math.min(0.97, progress));
+      const angle = Math.PI * (1 - clamped);
+      const cx = 85 + 62 * Math.cos(angle);
+      const cy = 64 - 44 * Math.sin(angle);
+
+      const dotGroup = document.getElementById('sunDotGroup');
+      dotGroup.setAttribute('transform', `translate(${cx.toFixed(1)}, ${cy.toFixed(1)})`);
+
+      const core = document.getElementById('sunDotCore');
+      core.setAttribute('fill', isDaytime ? '#C44E32' : '#376175');
+
+      const label = document.getElementById('sunNowLabel');
+      label.setAttribute('x', Math.max(32, Math.min(138, cx)).toFixed(1));
+      label.setAttribute('y', (cy - 10).toFixed(1));
+      label.textContent = isDaytime ? 'Сейчас' : 'За горизонтом';
+    }
+
+    // =========================================================================
+    // 5. ЗАГРУЗКА ДОСТОВЕРНЫХ ДАННЫХ ПОГОДЫ ДЛЯ РОССИИ (OPEN-METEO BEST_MATCH)
+    // =========================================================================
+    const DEFAULT_LOCATION = {
+      lat: 55.7558,
+      lon: 37.6173,
+      name: 'МОСКВА'
+    };
+
+    let currentLocation = DEFAULT_LOCATION;
+
+    function parseHHMMToMinutes(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    }
+
+    async function loadLiveWeather(lat, lon, cityName) {
+      currentLocation = { lat, lon, name: cityName.toUpperCase() };
+      localStorage.setItem('vintage_ru_location_v2', JSON.stringify(currentLocation));
+      document.getElementById('uiFooterCity').textContent = currentLocation.name;
+
+      try {
+        const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,is_day&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&wind_speed_unit=ms&timezone=auto&models=best_match`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('Network error');
+        const data = await response.json();
+
+        localStorage.setItem('vintage_ru_weather_cache_v2', JSON.stringify({
+          timestamp: Date.now(),
+          location: currentLocation,
+          payload: data
+        }));
+
+        applyWeatherDataToUI(data, currentLocation.name);
+      } catch (err) {
+        console.warn('Используется кэш погоды:', err);
+        const cached = localStorage.getItem('vintage_ru_weather_cache_v2');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          applyWeatherDataToUI(parsed.payload, parsed.location.name);
+        }
+      }
+    }
+
+    function applyWeatherDataToUI(data, cityName) {
+      const cur = data.current;
+      const hourly = data.hourly;
+      const daily = data.daily;
+
+      // Текущее время в часовом поясе выбранного города
+      const curTimeStr = cur.time; // Формат "YYYY-MM-DDTHH:MM"
+      const curDatePart = curTimeStr.split('T')[0];
+      const curClockPart = curTimeStr.split('T')[1] || '12:00';
+      const curHourPrefix = curTimeStr.slice(0, 13); // "YYYY-MM-DDTHH"
+
+      let startIdx = hourly.time.findIndex(t => t.startsWith(curHourPrefix));
+      if (startIdx < 0) startIdx = 0;
+
+      // 1. Температура и погодный статус (с авто-масштабированием длинных фраз)
+      const curWmo = decodeWmoCode(cur.weather_code);
+      document.getElementById('uiTemp').textContent = `${Math.round(cur.temperature_2m)}°`;
+      const condEl = document.getElementById('uiCondition');
+      condEl.textContent = curWmo.text;
+      if (curWmo.text.length > 14) {
+        condEl.classList.add('long-phrase');
+      } else {
+        condEl.classList.remove('long-phrase');
+      }
+
+      // 2. Ветер и компас
+      const windSpeedMs = Math.round(cur.wind_speed_10m);
+      const windDeg = cur.wind_direction_10m || 0;
+      const windCard = degToRussianCardinal(windDeg);
+      document.getElementById('uiWindSpeed').textContent = windSpeedMs;
+      document.getElementById('uiWindLabel').textContent = `ВЕТЕР · ${windSpeedMs} М/С · ${windCard}`;
+      document.getElementById('compassNeedle').setAttribute('transform', `translate(40, 40) rotate(${windDeg})`);
+
+      // 3. Шесть показателей (Макс/Мин согласованы с текущей температурой)
+      const todayMax = Math.max(cur.temperature_2m, daily.temperature_2m_max[0]);
+      const todayMin = Math.min(cur.temperature_2m, daily.temperature_2m_min[0]);
+
+      // Вероятность осадков в ближайшие часы
+      const nextProbs = hourly.precipitation_probability.slice(startIdx, startIdx + 19);
+      const currentHourProb = hourly.precipitation_probability[startIdx] ?? daily.precipitation_probability_max[0] ?? 0;
+      const maxNext18Prob = Math.max(...nextProbs, currentHourProb);
+
+      const currentUv = Math.round(hourly.uv_index[startIdx] ?? daily.uv_index_max[0] ?? 0);
+
+      document.getElementById('uiFeels').textContent = `${Math.round(cur.apparent_temperature)}°`;
+      document.getElementById('uiHigh').textContent = `${Math.round(todayMax)}°`;
+      document.getElementById('uiLow').textContent = `${Math.round(todayMin)}°`;
+      document.getElementById('uiRainProb').textContent = `${Math.round(maxNext18Prob)}%`;
+      document.getElementById('uiHumid').textContent = `${Math.round(cur.relative_humidity_2m)}%`;
+      document.getElementById('uiUv').textContent = `${currentUv}`;
+
+      // 4. Почасовой график на 18 часов (19 точек: от 0 до +18ч)
+      const temps19 = [];
+      const probs19 = [];
+      for (let i = 0; i <= 18; i++) {
+        const idx = Math.min(hourly.temperature_2m.length - 1, startIdx + i);
+        temps19.push(i === 0 ? cur.temperature_2m : hourly.temperature_2m[idx]);
+        const p = hourly.precipitation_probability[idx] || 0;
+        const mm = hourly.precipitation ? (hourly.precipitation[idx] || 0) : 0;
+        probs19.push(mm > 0 ? Math.max(p, 60) : p);
+      }
+
+      const getClockLabel = (offset) => {
+        const idx = Math.min(hourly.time.length - 1, startIdx + offset);
+        return hourly.time[idx].split('T')[1].slice(0, 5);
+      };
+
+      const labels5 = [
+        'СЕЙЧАС',
+        getClockLabel(4),
+        getClockLabel(8),
+        getClockLabel(12),
+        getClockLabel(16)
+      ];
+
+      renderHourlyChart(temps19, probs19, labels5);
+
+      // 5. Прогноз на 7 дней
+      const shortDaysRu = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+      const weeklyData = daily.time.slice(0, 7).map((dateStr, i) => {
+        const dObj = new Date(dateStr + 'T12:00:00');
+        const wmo = decodeWmoCode(daily.weather_code[i]);
+        return {
+          dayName: shortDaysRu[dObj.getDay()],
+          icon: wmo.icon,
+          high: i === 0 ? todayMax : daily.temperature_2m_max[i],
+          low: i === 0 ? todayMin : daily.temperature_2m_min[i]
+        };
+      });
+      renderWeeklyForecast(weeklyData, cur.temperature_2m);
+
+      // 6. Восход, закат, положение солнца и золотой час
+      const sunriseStr = daily.sunrise[0] ? daily.sunrise[0].split('T')[1].slice(0, 5) : '06:50';
+      const sunsetStr = daily.sunset[0] ? daily.sunset[0].split('T')[1].slice(0, 5) : '17:30';
+      document.getElementById('uiSunrise').textContent = sunriseStr;
+      document.getElementById('uiSunset').textContent = sunsetStr;
+
+      const nowMins = parseHHMMToMinutes(curClockPart);
+      const srMins = parseHHMMToMinutes(sunriseStr);
+      const ssMins = parseHHMMToMinutes(sunsetStr);
+      updateSunHorizonArc(nowMins, srMins, ssMins);
+
+      // Вечерний золотой час начинается за 42 минуты до заката
+      const goldenMins = (ssMins - 42 + 1440) % 1440;
+      const gH = String(Math.floor(goldenMins / 60)).padStart(2, '0');
+      const gM = String(goldenMins % 60).padStart(2, '0');
+      document.getElementById('uiGoldenHour').textContent = `${gH}:${gM}`;
+
+      // 7. Фаза луны
+      const moonInfo = calculateMoonAstronomy(new Date(curDatePart + 'T12:00:00Z'));
+      document.getElementById('uiMoonPhase').textContent = moonInfo.name;
+      document.getElementById('moonLitPath').setAttribute('d', moonInfo.pathD);
+
+      // 8. Редакционная сводка на русском языке
+      const rainyHoursCount = probs19.filter(p => p >= 35).length;
+      const tmrwMax = Math.round(daily.temperature_2m_max[1] ?? todayMax);
+      const tmrwWmo = decodeWmoCode(daily.weather_code[1] ?? cur.weather_code);
+      const tmrwRainProb = daily.precipitation_probability_max[1] ?? 0;
+
+      let firstSentence = 'Без осадков в ближайшие 18 часов.';
+      if (rainyHoursCount >= 6) {
+        firstSentence = `В ближайшие 18 часов ожидаются осадки (${Math.round(maxNext18Prob)}%).`;
+      } else if (rainyHoursCount > 0) {
+        firstSentence = `Местами возможны небольшие осадки (${Math.round(maxNext18Prob)}%).`;
+      }
+
+      let secondSentence = `Завтра ${tmrwMax > 0 ? '+' + tmrwMax : tmrwMax}°, ${tmrwWmo.text.toLowerCase()}.`;
+      if (tmrwRainProb >= 45 && !tmrwWmo.rainy) {
+        secondSentence = `Завтра до ${tmrwMax > 0 ? '+' + tmrwMax : tmrwMax}°, вероятен дождь.`;
+      }
+
+      document.getElementById('uiSummaryText').textContent = `${firstSentence} ${secondSentence}`;
+
+      // 9. Дата и город в подвале
+      const fullDaysRu = ['ВОСКРЕСЕНЬЕ', 'ПОНЕДЕЛЬНИК', 'ВТОРНИК', 'СРЕДА', 'ЧЕТВЕРГ', 'ПЯТНИЦА', 'СУББОТА'];
+      const monthsRu = ['ЯНВАРЯ', 'ФЕВРАЛЯ', 'МАРТА', 'АПРЕЛЯ', 'МАЯ', 'ИЮНЯ', 'ИЮЛЯ', 'АВГУСТА', 'СЕНТЯБРЯ', 'ОКТЯБРЯ', 'НОЯБРЯ', 'ДЕКАБРЯ'];
+      const localDateObj = new Date(curDatePart + 'T12:00:00');
+      document.getElementById('uiFooterDate').textContent = `${fullDaysRu[localDateObj.getDay()]}, ${localDateObj.getDate()} ${monthsRu[localDateObj.getMonth()]}`;
+      document.getElementById('uiFooterCity').textContent = cityName.toUpperCase();
+    }
+
+    function refreshCurrentWeather() {
+      loadLiveWeather(currentLocation.lat, currentLocation.lon, currentLocation.name);
+    }
+
+    // =========================================================================
+    // 6. ПОИСК ЛЮБОГО ГОРОДА РОССИИ И МИРА + АВТООПРЕДЕЛЕНИЕ ПО GPS
+    // =========================================================================
+    let searchTimeout = null;
+
+    function openCityDrawer() {
+      document.getElementById('cityDrawer').classList.add('open');
+      const input = document.getElementById('citySearchInput');
+      input.value = '';
+      document.getElementById('autocompleteList').innerHTML = '';
+      setTimeout(() => input.focus(), 60);
+    }
+
+    function closeCityDrawer() {
+      document.getElementById('cityDrawer').classList.remove('open');
+    }
+
+    function selectPresetCity(lat, lon, name) {
+      closeCityDrawer();
+      loadLiveWeather(lat, lon, name);
+    }
+
+    function handleCityAutocomplete(query) {
+      clearTimeout(searchTimeout);
+      const trimmed = query.trim();
+      if (trimmed.length < 2) {
+        document.getElementById('autocompleteList').innerHTML = '';
+        return;
+      }
+      searchTimeout = setTimeout(() => executeGeocodingSearch(trimmed), 260);
+    }
+
+    function triggerDirectSearch() {
+      const q = document.getElementById('citySearchInput').value.trim();
+      if (q) executeGeocodingSearch(q, true);
+    }
+
+    async function executeGeocodingSearch(query, autoSelectFirst = false) {
+      const listEl = document.getElementById('autocompleteList');
+      listEl.innerHTML = `<div class="text-xs text-[#6E675B] py-2">Поиск населённых пунктов...</div>`;
+
+      try {
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8&language=ru&format=json`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.results || data.results.length === 0) {
+          listEl.innerHTML = `<div class="text-xs text-[#BD4A36] py-2">Населённый пункт не найден. Проверьте написание.</div>`;
+          return;
+        }
+
+        if (autoSelectFirst) {
+          const first = data.results[0];
+          selectPresetCity(first.latitude, first.longitude, first.name);
+          return;
+        }
+
+        listEl.innerHTML = data.results.map(item => {
+          const region = [item.admin1, item.country].filter(Boolean).join(', ');
+          const safeName = item.name.replace(/'/g, "\\'");
+          return `
+            <button onclick="selectPresetCity(${item.latitude}, ${item.longitude}, '${safeName}')" class="w-full text-left px-3 py-2 rounded-xl bg-white/70 hover:bg-white border border-[#8A806C]/30 flex items-center justify-between transition">
+              <div>
+                <div class="text-xs font-bold text-[#1F1D19]">${item.name}</div>
+                <div class="text-[10px] text-[#6E675B]">${region}</div>
+              </div>
+              <span class="mono-label text-[8px] text-[#376175]">ВЫБРАТЬ →</span>
+            </button>
+          `;
+        }).join('');
+      } catch (e) {
+        listEl.innerHTML = `<div class="text-xs text-[#BD4A36] py-2">Ошибка сети при поиске города.</div>`;
+      }
+    }
+
+    function locateByGPS() {
+      const listEl = document.getElementById('autocompleteList');
+      if (!navigator.geolocation) {
+        listEl.innerHTML = `<div class="text-xs text-[#BD4A36] py-2">Геолокация не поддерживается вашим браузером.</div>`;
+        return;
+      }
+      listEl.innerHTML = `<div class="text-xs text-[#376175] py-2">Получение точных координат GPS...</div>`;
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          let cityTitle = 'МОЯ ЛОКАЦИЯ';
+          try {
+            const rev = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=ru`);
+            const revJson = await rev.json();
+            cityTitle = revJson.address?.city || revJson.address?.town || revJson.address?.village || revJson.address?.state || 'МОЯ ЛОКАЦИЯ';
+          } catch (e) {}
+          selectPresetCity(latitude, longitude, cityTitle);
+        },
+        () => {
+          listEl.innerHTML = `<div class="text-xs text-[#BD4A36] py-2">Доступ к GPS отклонён. Выберите город в поиске выше.</div>`;
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    // =========================================================================
+    // 7. СКАЧИВАНИЕ ЧИСТОГО .HTML ВИДЖЕТА ДЛЯ ANDROID (БЕЗ КНОПКИ СКАЧИВАНИЯ)
+    // =========================================================================
+    function downloadCleanWidgetFile() {
+      const clone = document.documentElement.cloneNode(true);
+      const toolbar = clone.querySelector('#previewDownloadToolbar');
+      if (toolbar) toolbar.remove();
+
+      const drawer = clone.querySelector('#cityDrawer');
+      if (drawer) drawer.classList.remove('open');
+
+      const htmlString = '<!DOCTYPE html>\n' + clone.outerHTML;
+      const blob = new Blob([htmlString], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'weather-widget-ru.html';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // =========================================================================
+    // 8. АВТОЗАПУСК И ФОНОВОЕ ОБНОВЛЕНИЕ КАЖДЫЕ 30 МИНУТ
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Если открыто как установленное веб-приложение или с параметром ?widget=1, скрываем кнопку скачивания
+      if (window.location.search.includes('widget=1') || window.matchMedia('(display-mode: standalone)').matches) {
+        const tb = document.getElementById('previewDownloadToolbar');
+        if (tb) tb.style.display = 'none';
+      }
+
+      const savedLoc = localStorage.getItem('vintage_ru_location_v2');
+      if (savedLoc) {
+        try {
+          currentLocation = JSON.parse(savedLoc);
+        } catch (e) {}
+      }
+
+      loadLiveWeather(currentLocation.lat, currentLocation.lon, currentLocation.name);
+
+      // Автообновление каждые 30 минут
+      setInterval(() => {
+        loadLiveWeather(currentLocation.lat, currentLocation.lon, currentLocation.name);
+      }, 30 * 60 * 1000);
+    });
+  </script>
+
+</body></html>
